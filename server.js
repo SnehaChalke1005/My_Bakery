@@ -1,18 +1,17 @@
 const express = require('express');
 const mysql = require('mysql2');
-const app = express();
 const cors = require('cors');
+
+const app = express();
 app.use(cors());
-
-
 app.use(express.json());
-
 app.use(express.static('public'));
 
+// Database connection (⚠️ Render won’t have localhost MySQL — you’ll need external DB later)
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: 'root123',   // make sure this matches your MySQL root password
+  password: 'root123',
   database: 'bakerydb'
 });
 
@@ -21,7 +20,7 @@ app.post('/register', (req, res) => {
   const { name, email, phone, password } = req.body;
   db.query(
     'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-    [name, email, phone, password],
+    [name, email, password],   // ⚠️ removed phone here, since query has 3 placeholders
     (err, results) => {
       if (err) {
         console.error(err);
@@ -47,16 +46,16 @@ app.get('/users', (req, res) => {
 
 // Root route (homepage)
 app.get('/', (req, res) => {
-  res.send('Welcome to Sneha’s Bakery Backend!');
+  res.send('Hello, Sweet Tooth!!! Backend is live!');
 });
 
 // Login route
 app.post('/login', (req, res) => {
-  const { name, password } = req.body;
+  const { email, name, password } = req.body;  // ⚠️ fixed destructuring
 
   db.query(
     'SELECT * FROM users WHERE (email = ? OR name = ?) AND password = ?',
-    [email, email, phone, password],
+    [email, name, password],
     (err, results) => {
       if (err) {
         console.error(err);
@@ -70,8 +69,8 @@ app.post('/login', (req, res) => {
   );
 });
 
-
-// Start server
-app.listen(3000, () => {
-  console.log('🚀 Server running on http://localhost:3000');
+// Start server (Render needs process.env.PORT)
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
